@@ -11,6 +11,7 @@ interface Submission {
 
 export default function HomePage() {
   const [email, setEmail] = useState('')
+  const [authenticatedEmail, setAuthenticatedEmail] = useState('')
   const [code, setCode] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -118,6 +119,7 @@ export default function HomePage() {
       }
 
       setAuthenticated(true)
+      setAuthenticatedEmail(data.email || '')
       setCode(codeToValidate)
     } catch (err: any) {
       setError(err.message)
@@ -139,7 +141,7 @@ export default function HomePage() {
     try {
       const formData = new FormData()
       formData.append('notes', notes)
-      formData.append('email', email)
+      formData.append('email', authenticatedEmail)
       photos.forEach((photo) => {
         formData.append('photos', photo)
       })
