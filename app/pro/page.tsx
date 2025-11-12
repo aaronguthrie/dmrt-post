@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Sparkles, Mail, Loader2, Send, CheckCircle2 } from 'lucide-react'
 
 interface Submission {
   id: string
@@ -182,121 +183,199 @@ export default function ProPage() {
 
   if (!authenticated) {
     return (
-      <div className="container">
-        <div className="card">
-          <h1>PRO Dashboard</h1>
-          <p style={{ marginTop: '1rem', marginBottom: '2rem' }}>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="card w-full max-w-md">
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Sparkles className="h-6 w-6 text-purple-600 animate-sparkle" />
+              <h1 className="text-3xl font-bold text-gradient-purple">DMRT Social Media</h1>
+            </div>
+            <p className="text-gray-600">PRO Dashboard</p>
+          </div>
+          <p className="text-gray-600 mb-6 text-center">
             Enter your email to receive a login link.
           </p>
-          <input
-            type="email"
-            className="input"
-            placeholder="PRO email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendLoginLink()}
-          />
-          {error && <div className="error">{error}</div>}
-          {success && <div className="success">{success}</div>}
-          <button
-            className="button"
-            onClick={sendLoginLink}
-            disabled={loading || !email}
-          >
-            {loading ? 'Sending...' : 'Send Login Link'}
-          </button>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  id="email"
+                  type="email"
+                  className="input pl-10"
+                  placeholder="pro@donegalmrt.ie"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendLoginLink()}
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-200">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm border border-green-200">
+                {success}
+              </div>
+            )}
+
+            <button
+              className="btn btn-primary w-full"
+              onClick={sendLoginLink}
+              disabled={loading || !email}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="inline-block mr-2 h-4 w-4" />
+                  Send Login Link
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container">
-      <div className="card">
-        <h1>PRO Dashboard</h1>
-        <p style={{ marginTop: '1rem', marginBottom: '2rem' }}>
-          Review and post submissions
-        </p>
+    <div className="min-h-screen py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="card mb-8">
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Sparkles className="h-6 w-6 text-purple-600 animate-sparkle" />
+              <h1 className="text-4xl font-bold text-gradient-purple">DMRT Social Media</h1>
+            </div>
+            <p className="text-gray-600 text-lg">PRO Dashboard</p>
+            <p className="text-gray-500 mt-2">Review and post submissions</p>
+          </div>
 
-        {error && <div className="error">{error}</div>}
-        {success && <div className="success">{success}</div>}
+          {error && (
+            <div className="p-4 rounded-lg bg-red-50 text-red-700 border border-red-200 mb-4">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="p-4 rounded-lg bg-green-50 text-green-700 border border-green-200 mb-4">
+              {success}
+            </div>
+          )}
+        </div>
 
         {submissions.length === 0 ? (
-          <p>No submissions pending review.</p>
+          <div className="card text-center py-12">
+            <CheckCircle2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No submissions pending review.</p>
+          </div>
         ) : (
-          <div>
+          <div className="space-y-6">
             {submissions.map((submission) => (
               <div
                 key={submission.id}
                 className="card"
-                style={{ marginBottom: '2rem' }}
               >
-                <div style={{ marginBottom: '1rem' }}>
-                  <strong>Status:</strong> {submission.status}
-                  <br />
-                  <strong>Submitted by:</strong> {submission.submittedByEmail}
-                  <br />
-                  <strong>Date:</strong>{' '}
-                  {new Date(submission.createdAt).toLocaleString()}
+                <div className="mb-4 pb-4 border-b border-gray-200">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase tracking-wide">Status</span>
+                      <p className="font-semibold text-gray-900">{submission.status}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase tracking-wide">Submitted by</span>
+                      <p className="font-medium text-gray-700">{submission.submittedByEmail}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase tracking-wide">Date</span>
+                      <p className="font-medium text-gray-700">
+                        {new Date(submission.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <label className="label">Post Text</label>
-                {editingId === submission.id ? (
-                  <textarea
-                    className="textarea"
-                    value={editedTexts[submission.id] || ''}
-                    onChange={(e) =>
-                      setEditedTexts({
-                        ...editedTexts,
-                        [submission.id]: e.target.value,
-                      })
-                    }
-                    style={{ minHeight: '200px' }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      background: '#f9fafb',
-                      padding: '1.5rem',
-                      borderRadius: '8px',
-                      whiteSpace: 'pre-wrap',
-                      marginBottom: '1rem',
-                      lineHeight: '1.6',
-                    }}
-                  >
-                    {submission.editedByPro || submission.finalPostText}
-                  </div>
-                )}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Post Text</label>
+                  {editingId === submission.id ? (
+                    <textarea
+                      className="textarea min-h-[200px]"
+                      value={editedTexts[submission.id] || ''}
+                      onChange={(e) =>
+                        setEditedTexts({
+                          ...editedTexts,
+                          [submission.id]: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-6 rounded-lg border border-purple-200">
+                      <pre className="whitespace-pre-wrap text-sm leading-relaxed font-medium text-gray-900">
+                        {submission.editedByPro || submission.finalPostText}
+                      </pre>
+                    </div>
+                  )}
+                </div>
 
                 {submission.photoPaths.length > 0 && (
-                  <div className="photo-grid" style={{ marginBottom: '1rem' }}>
-                    {submission.photoPaths.map((path, index) => (
-                      <div key={index} className="photo-item">
-                        <img src={path} alt={`Photo ${index + 1}`} />
-                      </div>
-                    ))}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
+                    <div className="photo-grid">
+                      {submission.photoPaths.map((path, index) => (
+                        <div key={index} className="photo-item">
+                          <img src={path} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
                   {editingId === submission.id ? (
                     <>
                       <button
-                        className="button"
+                        className="btn btn-primary flex-1"
                         onClick={() => handlePostNow(submission.id)}
                         disabled={loading}
                       >
-                        Post Now
+                        {loading ? (
+                          <>
+                            <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
+                            Posting...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="inline-block mr-2 h-4 w-4" />
+                            Post Now
+                          </>
+                        )}
                       </button>
                       <button
-                        className="button button-secondary"
+                        className="btn btn-secondary flex-1"
                         onClick={() => handleSendForApproval(submission.id)}
                         disabled={loading}
                       >
-                        Send to Team Leader
+                        {loading ? (
+                          <>
+                            <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          'Send to Team Leader'
+                        )}
                       </button>
                       <button
-                        className="button button-secondary"
+                        className="btn btn-secondary"
                         onClick={() => setEditingId(null)}
                       >
                         Cancel
@@ -304,7 +383,7 @@ export default function ProPage() {
                     </>
                   ) : (
                     <button
-                      className="button"
+                      className="btn btn-primary"
                       onClick={() => handleEdit(submission)}
                     >
                       Edit & Post
@@ -313,29 +392,30 @@ export default function ProPage() {
                 </div>
 
                 {(submission.postedToFacebook || submission.postedToInstagram) && (
-                  <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
-                    {submission.postedToFacebook && submission.facebookPostId && (
-                      <div>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600 mb-2">Posted to:</p>
+                    <div className="flex gap-4">
+                      {submission.postedToFacebook && submission.facebookPostId && (
                         <a
                           href={`https://facebook.com/${submission.facebookPostId}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="text-purple-600 hover:text-purple-700 font-medium text-sm"
                         >
-                          View on Facebook
+                          View on Facebook →
                         </a>
-                      </div>
-                    )}
-                    {submission.postedToInstagram && submission.instagramPostId && (
-                      <div>
+                      )}
+                      {submission.postedToInstagram && submission.instagramPostId && (
                         <a
                           href={`https://instagram.com/p/${submission.instagramPostId}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="text-purple-600 hover:text-purple-700 font-medium text-sm"
                         >
-                          View on Instagram
+                          View on Instagram →
                         </a>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
