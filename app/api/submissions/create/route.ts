@@ -4,6 +4,8 @@ import { uploadPhotos } from '@/lib/blob'
 import { generatePost } from '@/lib/gemini'
 import { isBot } from '@/lib/security'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Block bots
