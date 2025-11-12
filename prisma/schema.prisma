@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+enum Role {
+  team_member
+  pro
+  leader
+}
+
+enum SubmissionStatus {
+  draft
+  awaiting_pro
+  awaiting_leader
+  awaiting_pro_to_post
+  posted
+  rejected
+}
+
+model AuthCode {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  email         String
+  role          Role
+  submissionId  String?   @map("submission_id")
+  used          Boolean   @default(false)
+  expiresAt     DateTime  @map("expires_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@map("auth_codes")
+}
+
+model Submission {
+  id                String            @id @default(uuid())
+  notes             String            @db.Text
+  photoPaths        String[]          @map("photo_paths")
+  status            SubmissionStatus  @default(draft)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  submittedByEmail  String            @map("submitted_by_email")
+  finalPostText     String?           @db.Text @map("final_post_text")
+  editedByPro       String?           @db.Text @map("edited_by_pro")
+  postedToFacebook  Boolean           @default(false) @map("posted_to_facebook")
+  postedToInstagram Boolean           @default(false) @map("posted_to_instagram")
+  facebookPostId    String?           @map("facebook_post_id")
+  instagramPostId   String?           @map("instagram_post_id")
+  postedAt          DateTime?         @map("posted_at")
+
+  feedback          Feedback[]
+  leaderApprovals   LeaderApproval[]
+
+  @@map("submissions")
+}
+
+model Feedback {
+  id            String     @id @default(uuid())
+  submissionId  String     @map("submission_id")
+  feedbackText  String     @db.Text @map("feedback_text")
+  versionNumber Int        @map("version_number")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+model LeaderApproval {
+  id            String      @id @default(uuid())
+  submissionId  String      @map("submission_id")
+  approved      Boolean
+  comment       String?     @db.Text
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("leader_approvals")
+}
