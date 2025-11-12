@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { postToFacebook, postToInstagram } from '@/lib/meta'
+import { isBot } from '@/lib/security'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Block bots
+    const userAgent = request.headers.get('user-agent')
+    if (isBot(userAgent)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
     const submission = await prisma.submission.findUnique({
       where: { id: params.id },
     })

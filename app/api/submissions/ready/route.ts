@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { notifyPRO } from '@/lib/resend'
+import { isBot } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
   try {
+    // Block bots
+    const userAgent = request.headers.get('user-agent')
+    if (isBot(userAgent)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
     const { submissionId } = await request.json()
 
     if (!submissionId) {

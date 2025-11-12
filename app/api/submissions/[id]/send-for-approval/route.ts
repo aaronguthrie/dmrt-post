@@ -3,12 +3,18 @@ import { prisma } from '@/lib/db'
 import { createAuthCode } from '@/lib/auth'
 import { notifyTeamLeader } from '@/lib/resend'
 import { SubmissionStatus } from '@prisma/client'
+import { isBot } from '@/lib/security'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Block bots
+    const userAgent = request.headers.get('user-agent')
+    if (isBot(userAgent)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
     const { editedPostText } = await request.json()
 
     const submission = await prisma.submission.findUnique({
