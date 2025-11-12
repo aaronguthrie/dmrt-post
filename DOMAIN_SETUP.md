@@ -61,6 +61,36 @@ Or simply push a new commit to trigger a new deployment.
 
 ## Troubleshooting
 
+### Getting Vercel 404 Error (Domain resolves but shows 404)
+
+This usually means the domain is routing to Vercel but isn't assigned to your project:
+
+1. **Verify Domain Assignment**:
+   - Go to Vercel Dashboard → Your Project → Settings → Domains
+   - Check that `post.dmrt.ie` shows "Valid Configuration" (green checkmark)
+   - If it shows "Invalid Configuration" or is missing, click "Add Domain" again
+
+2. **Check Domain Status**:
+   - The domain should show one of these statuses:
+     - ✅ "Valid Configuration" - Working correctly
+     - ⏳ "Pending" - DNS is propagating, wait a few minutes
+     - ❌ "Invalid Configuration" - DNS records are wrong
+
+3. **Redeploy After Adding Domain**:
+   - After adding the domain in Vercel, trigger a new deployment:
+     - Go to Deployments tab
+     - Click "Redeploy" on the latest deployment
+     - OR push a new commit to GitHub
+
+4. **Verify Project Assignment**:
+   - Make sure you're adding the domain to the correct project (`dmrt-post`)
+   - If you have multiple projects, double-check you're in the right one
+
+5. **Check DNS Records**:
+   - Verify your DNS records match exactly what Vercel shows
+   - CNAME should point to: `cname.vercel-dns.com`
+   - Or A record should point to the IP Vercel provides
+
 ### Domain Not Resolving
 - Check DNS records are correct in your registrar
 - Use `dig post.dmrt.ie` or `nslookup post.dmrt.ie` to verify DNS
