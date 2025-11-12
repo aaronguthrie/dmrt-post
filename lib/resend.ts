@@ -1,6 +1,12 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not set')
+  }
+  return new Resend(apiKey)
+}
 
 export async function sendMagicLink(
   email: string,
@@ -23,7 +29,7 @@ export async function sendMagicLink(
     link += `/approve/${submissionId}?code=${code}`
   }
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: email,
     subject: 'DMRT Social Media - Your Login Link',
@@ -40,7 +46,7 @@ export async function notifyPRO(submissionId: string): Promise<void> {
   if (baseUrl && !baseUrl.startsWith('http')) {
     baseUrl = `https://${baseUrl}`
   }
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
     subject: 'New DMRT Post Ready for Review',
@@ -58,7 +64,7 @@ export async function notifyTeamLeader(submissionId: string, code: string): Prom
   }
   const link = `${baseUrl}/approve/${submissionId}?code=${code}`
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.TEAM_LEADER_EMAIL!,
     subject: 'DMRT Post Awaiting Your Approval',
@@ -75,7 +81,7 @@ export async function notifyProPostApproved(submissionId: string): Promise<void>
   if (baseUrl && !baseUrl.startsWith('http')) {
     baseUrl = `https://${baseUrl}`
   }
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
     subject: 'Post Approved - Ready to Post',
@@ -91,7 +97,7 @@ export async function notifyProPostRejected(submissionId: string, comment: strin
   if (baseUrl && !baseUrl.startsWith('http')) {
     baseUrl = `https://${baseUrl}`
   }
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
     subject: 'Post Rejected',
