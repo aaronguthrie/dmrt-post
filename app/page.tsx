@@ -314,7 +314,7 @@ export default function HomePage() {
                 </button>
               </div>
               <p className="text-gray-600">
-                Enter your incident or training notes below—rough drafts are fine. Our AI will turn them into a polished social media post. You can review and edit before it goes to PRO for approval, so don't worry about making it perfect.
+                Enter your incident or training notes below—rough drafts are fine. Our AI will turn them into a polished social media post. You can review and edit before it goes to PRO for approval, so don&apos;t worry about making it perfect.
               </p>
             </div>
 

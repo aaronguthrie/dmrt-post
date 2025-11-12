@@ -35,6 +35,7 @@ export default function DashboardPage() {
     if (authenticated) {
       loadSubmissions()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated, search, statusFilter])
 
   const authenticate = async () => {
@@ -101,7 +102,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="card w-full max-w-md">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gradient-purple mb-2">DMRT Social Media</h1>
+            <h1 className="text-3xl font-bold text-gradient-purple mb-2">DMRT Postal Service</h1>
             <p className="text-gray-600">Transparency Dashboard</p>
           </div>
           <p className="text-gray-600 mb-6 text-center">
