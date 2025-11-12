@@ -35,6 +35,7 @@ export default function DashboardPage() {
     if (authenticated) {
       loadSubmissions()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated, search, statusFilter])
 
   const authenticate = async () => {
