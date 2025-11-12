@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { createAuthCode } from '@/lib/auth'
 import { notifyTeamLeader } from '@/lib/resend'
+import { SubmissionStatus } from '@prisma/client'
 
 export async function POST(
   request: NextRequest,
@@ -19,7 +20,7 @@ export async function POST(
     }
 
     // Update with PRO's edits if provided
-    const updateData: { status: string; editedByPro?: string } = {
+    const updateData: { status: SubmissionStatus; editedByPro?: string } = {
       status: 'awaiting_leader',
     }
 
