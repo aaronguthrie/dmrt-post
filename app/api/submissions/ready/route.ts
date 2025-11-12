@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { notifyPRO } from '@/lib/resend'
+import { notifyPRO, getBaseUrlFromRequest } from '@/lib/resend'
 import { isBot } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    await notifyPRO(submissionId)
+    const baseUrl = getBaseUrlFromRequest(request)
+    await notifyPRO(submissionId, baseUrl)
 
     return NextResponse.json({ success: true })
   } catch (error) {

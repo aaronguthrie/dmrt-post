@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAuthCode, validateEmailForRole } from '@/lib/auth'
-import { sendMagicLink } from '@/lib/resend'
+import { sendMagicLink, getBaseUrlFromRequest } from '@/lib/resend'
 import { Role } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
@@ -79,9 +79,12 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
+    // Get base URL from request (to use custom domain if available)
+    const baseUrl = getBaseUrlFromRequest(request)
+
     // Send magic link
     try {
-      await sendMagicLink(email, validRole, code)
+      await sendMagicLink(email, validRole, code, undefined, baseUrl)
     } catch (emailError: any) {
       console.error('Email sending error:', emailError)
       return NextResponse.json({ 

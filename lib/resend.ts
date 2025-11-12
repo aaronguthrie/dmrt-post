@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { NextRequest } from 'next/server'
 
 function getResend() {
   const apiKey = process.env.RESEND_API_KEY
@@ -8,7 +9,18 @@ function getResend() {
   return new Resend(apiKey)
 }
 
-function getBaseUrl(): string {
+export function getBaseUrlFromRequest(request: NextRequest): string | undefined {
+  const host = request.headers.get('host') || request.headers.get('x-forwarded-host')
+  const protocol = request.headers.get('x-forwarded-proto') || 'https'
+  return host ? `${protocol}://${host}` : undefined
+}
+
+function getBaseUrl(baseUrlOverride?: string): string {
+  // If baseUrl is provided, use it (from request headers)
+  if (baseUrlOverride) {
+    return baseUrlOverride
+  }
+  
   // Use NEXT_PUBLIC_APP_URL or APP_URL if set (for custom domains)
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL
@@ -29,9 +41,10 @@ export async function sendMagicLink(
   email: string,
   role: 'team_member' | 'pro' | 'leader',
   code: string,
-  submissionId?: string
+  submissionId?: string,
+  baseUrlOverride?: string
 ): Promise<void> {
-  const baseUrl = getBaseUrl()
+  const baseUrl = getBaseUrl(baseUrlOverride)
   let link = baseUrl
 
   if (role === 'team_member') {
@@ -63,8 +76,8 @@ export async function sendMagicLink(
   }
 }
 
-export async function notifyPRO(submissionId: string): Promise<void> {
-  const baseUrl = getBaseUrl()
+export async function notifyPRO(submissionId: string, baseUrlOverride?: string): Promise<void> {
+  const baseUrl = getBaseUrl(baseUrlOverride)
   await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
@@ -76,8 +89,8 @@ export async function notifyPRO(submissionId: string): Promise<void> {
   })
 }
 
-export async function notifyTeamLeader(submissionId: string, code: string): Promise<void> {
-  const baseUrl = getBaseUrl()
+export async function notifyTeamLeader(submissionId: string, code: string, baseUrlOverride?: string): Promise<void> {
+  const baseUrl = getBaseUrl(baseUrlOverride)
   const link = `${baseUrl}/approve/${submissionId}?code=${code}`
 
   await getResend().emails.send({
@@ -92,8 +105,8 @@ export async function notifyTeamLeader(submissionId: string, code: string): Prom
   })
 }
 
-export async function notifyProPostApproved(submissionId: string): Promise<void> {
-  const baseUrl = getBaseUrl()
+export async function notifyProPostApproved(submissionId: string, baseUrlOverride?: string): Promise<void> {
+  const baseUrl = getBaseUrl(baseUrlOverride)
   await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
@@ -105,8 +118,8 @@ export async function notifyProPostApproved(submissionId: string): Promise<void>
   })
 }
 
-export async function notifyProPostRejected(submissionId: string, comment: string): Promise<void> {
-  const baseUrl = getBaseUrl()
+export async function notifyProPostRejected(submissionId: string, comment: string, baseUrlOverride?: string): Promise<void> {
+  const baseUrl = getBaseUrl(baseUrlOverride)
   await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
