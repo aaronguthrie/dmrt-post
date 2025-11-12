@@ -27,8 +27,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={GeistSans.variable}>
+      <head>
+        <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+        <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+        <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+      </head>
       <body className="font-sans">{children}</body>
     </html>
   )
 }
-
