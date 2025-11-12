@@ -98,28 +98,43 @@ export default function DashboardPage() {
 
   if (!authenticated) {
     return (
-      <div className="container">
-        <div className="card">
-          <h1>Dashboard Access</h1>
-          <p style={{ marginTop: '1rem', marginBottom: '2rem' }}>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="card w-full max-w-md">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-gradient-purple mb-2">DMRT Social Media</h1>
+            <p className="text-gray-600">Transparency Dashboard</p>
+          </div>
+          <p className="text-gray-600 mb-6 text-center">
             Enter the dashboard password to continue.
           </p>
-          <input
-            type="password"
-            className="input"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && authenticate()}
-          />
-          {error && <div className="error">{error}</div>}
-          <button
-            className="button"
-            onClick={authenticate}
-            disabled={loading || !password}
-          >
-            {loading ? 'Authenticating...' : 'Access Dashboard'}
-          </button>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                className="input w-full"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && authenticate()}
+              />
+            </div>
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-200">
+                {error}
+              </div>
+            )}
+            <button
+              className="btn btn-primary w-full"
+              onClick={authenticate}
+              disabled={loading || !password}
+            >
+              {loading ? 'Authenticating...' : 'Access Dashboard'}
+            </button>
+          </div>
         </div>
       </div>
     )
