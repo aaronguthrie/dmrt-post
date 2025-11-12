@@ -231,7 +231,7 @@ export default function HomePage() {
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-purple-600 animate-sparkle" />
-              <h1 className="text-3xl font-bold text-gradient-purple">DMRT Social Media</h1>
+              <h1 className="text-3xl font-bold text-gradient-purple">DMRT Postal Service</h1>
             </div>
             <p className="text-gray-600">Enter your email to receive a login link</p>
           </div>

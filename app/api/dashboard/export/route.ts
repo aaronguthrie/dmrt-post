@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { isBot } from '@/lib/security'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Block bots
+    const userAgent = request.headers.get('user-agent')
+    if (isBot(userAgent)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
     const submissions = await prisma.submission.findMany({
       include: {
         feedback: true,

@@ -3,8 +3,21 @@ import { GeistSans } from 'geist/font/sans'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'DMRT Social Media',
-  description: 'Donegal Mountain Rescue Team Social Media Post Management',
+  title: 'DMRT Postal Service',
+  description: 'DMRT Postal Service',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
+  },
 }
 
 export default function RootLayout({

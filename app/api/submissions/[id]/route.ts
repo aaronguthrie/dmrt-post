@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { isBot } from '@/lib/security'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Block bots
+    const userAgent = request.headers.get('user-agent')
+    if (isBot(userAgent)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
+
     const submission = await prisma.submission.findUnique({
       where: { id: params.id },
       include: {
@@ -34,6 +41,12 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Block bots
+    const userAgent = request.headers.get('user-agent')
+    if (isBot(userAgent)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
+
     const data = await request.json()
 
     const submission = await prisma.submission.update({
@@ -47,4 +60,3 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update submission' }, { status: 500 })
   }
 }
-

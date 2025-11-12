@@ -1,4 +1,4 @@
-# DMRT Social Media App
+# DMRT Postal Service App
 
 A Next.js application for Donegal Mountain Rescue Team (DMRT) that transforms raw team member notes into formatted social media posts for Facebook and Instagram.
 
