@@ -59,10 +59,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    if (!validateEmailForRole(email, validRole)) {
+    const isValid = validateEmailForRole(email, validRole)
+    console.log('Email validation result:', { email, role: validRole, isValid })
+    
+    if (!isValid) {
       return NextResponse.json({ 
         error: 'Email not authorised. If you think this is wrong reach out to Public Relations Officer.',
-        code: 'UNAUTHORIZED_EMAIL'
+        code: 'UNAUTHORIZED_EMAIL',
+        details: `Email "${email}" with role "${validRole}" is not authorized. Check Vercel environment variables.`
       }, { status: 403 })
     }
 

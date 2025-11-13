@@ -11,17 +11,37 @@ export function generateAuthCode(): string {
 }
 
 export function validateEmailForRole(email: string, role: Role): boolean {
+  const trimmedEmail = email.trim()
+  
   if (role === 'pro') {
-    return email === process.env.PRO_EMAIL
+    const isValid = email === process.env.PRO_EMAIL
+    console.log('PRO validation:', { email: trimmedEmail, proEmail: process.env.PRO_EMAIL, isValid })
+    return isValid
   }
   if (role === 'leader') {
     // Support multiple team leader emails (comma-separated)
-    const leaderEmails = process.env.TEAM_LEADER_EMAIL?.split(',').map(e => e.trim()) || []
-    return leaderEmails.includes(email.trim())
+    const leaderEmailsRaw = process.env.TEAM_LEADER_EMAIL || ''
+    const leaderEmails = leaderEmailsRaw.split(',').map(e => e.trim()).filter(Boolean)
+    const isValid = leaderEmails.includes(trimmedEmail)
+    console.log('Leader validation:', { 
+      email: trimmedEmail, 
+      teamLeaderEmail: process.env.TEAM_LEADER_EMAIL,
+      parsedEmails: leaderEmails,
+      isValid 
+    })
+    return isValid
   }
   if (role === 'team_member') {
-    const approvedEmails = process.env.APPROVED_TEAM_EMAILS?.split(',') || []
-    return approvedEmails.includes(email.trim())
+    const approvedEmailsRaw = process.env.APPROVED_TEAM_EMAILS || ''
+    const approvedEmails = approvedEmailsRaw.split(',').map(e => e.trim()).filter(Boolean)
+    const isValid = approvedEmails.includes(trimmedEmail)
+    console.log('Team member validation:', { 
+      email: trimmedEmail, 
+      approvedEmailsRaw: process.env.APPROVED_TEAM_EMAILS,
+      parsedEmails: approvedEmails.slice(0, 3), // Log first 3 to avoid spam
+      isValid 
+    })
+    return isValid
   }
   return false
 }
