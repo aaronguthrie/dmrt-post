@@ -87,9 +87,17 @@ export async function notifyTeamLeader(submissionId: string, code: string): Prom
   const baseUrl = getBaseUrl()
   const link = `${baseUrl}/approve/${submissionId}?code=${code}`
 
+  // Support multiple team leader emails (comma-separated)
+  const leaderEmails = process.env.TEAM_LEADER_EMAIL?.split(',').map(e => e.trim()).filter(Boolean) || []
+  
+  if (leaderEmails.length === 0) {
+    throw new Error('TEAM_LEADER_EMAIL is not set')
+  }
+
+  // Send to all team leader emails
   await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
-    to: process.env.TEAM_LEADER_EMAIL!,
+    to: leaderEmails,
     subject: 'New DMRT Post - Awaiting your approval',
     html: `
       <p>A social media post is awaiting your approval. Please use the link below to securely access the DMRT Postal Service. This link will expire in 4 hours.</p>

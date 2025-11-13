@@ -39,8 +39,12 @@ export async function POST(
       data: updateData,
     })
 
-    // Create auth code for team leader
-    const leaderEmail = process.env.TEAM_LEADER_EMAIL!
+    // Create auth code for team leader (use first email for the code, but notify all)
+    const leaderEmails = process.env.TEAM_LEADER_EMAIL?.split(',').map(e => e.trim()).filter(Boolean) || []
+    if (leaderEmails.length === 0) {
+      throw new Error('TEAM_LEADER_EMAIL is not set')
+    }
+    const leaderEmail = leaderEmails[0] // Use first email for the auth code
     const code = await createAuthCode(leaderEmail, 'leader', params.id)
     await notifyTeamLeader(params.id, code)
 

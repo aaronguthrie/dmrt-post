@@ -15,7 +15,9 @@ export function validateEmailForRole(email: string, role: Role): boolean {
     return email === process.env.PRO_EMAIL
   }
   if (role === 'leader') {
-    return email === process.env.TEAM_LEADER_EMAIL
+    // Support multiple team leader emails (comma-separated)
+    const leaderEmails = process.env.TEAM_LEADER_EMAIL?.split(',').map(e => e.trim()) || []
+    return leaderEmails.includes(email.trim())
   }
   if (role === 'team_member') {
     const approvedEmails = process.env.APPROVED_TEAM_EMAILS?.split(',') || []
