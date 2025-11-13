@@ -108,21 +108,25 @@ export async function notifyTeamLeader(submissionId: string, code: string): Prom
   })
 }
 
-export async function notifyProPostApproved(submissionId: string): Promise<void> {
+export async function notifyProPostApproved(submissionId: string, code: string): Promise<void> {
   const baseUrl = getBaseUrl()
+  const link = `${baseUrl}/pro?code=${code}`
+  
   await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
     subject: 'Post Approved - Ready to Post',
     html: `
       <p>Your post has been approved by the team leader. You can now post it to social media.</p>
-      <p><a href="${baseUrl}/pro">Go to PRO dashboard</a></p>
+      <p><a href="${link}">Go to PRO dashboard</a></p>
     `,
   })
 }
 
-export async function notifyProPostRejected(submissionId: string, comment: string): Promise<void> {
+export async function notifyProPostRejected(submissionId: string, comment: string, code: string): Promise<void> {
   const baseUrl = getBaseUrl()
+  const link = `${baseUrl}/pro?code=${code}`
+  
   await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: process.env.PRO_EMAIL!,
@@ -130,7 +134,7 @@ export async function notifyProPostRejected(submissionId: string, comment: strin
     html: `
       <p>Your post has been rejected by the team leader.</p>
       <p>Comment: ${comment || 'No comment provided'}</p>
-      <p><a href="${baseUrl}/pro">Go to PRO dashboard</a></p>
+      <p><a href="${link}">Go to PRO dashboard</a></p>
     `,
   })
 }

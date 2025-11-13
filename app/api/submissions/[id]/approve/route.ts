@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { createAuthCode } from '@/lib/auth'
 import { notifyProPostApproved, notifyProPostRejected } from '@/lib/resend'
 import { isBot } from '@/lib/security'
 
@@ -32,6 +33,10 @@ export async function POST(
       },
     })
 
+    // Create auth code for PRO (for magic link in notification email)
+    const proEmail = process.env.PRO_EMAIL!
+    const code = await createAuthCode(proEmail, 'pro')
+
     if (approved) {
       // Update status and notify PRO
       await prisma.submission.update({
@@ -40,7 +45,7 @@ export async function POST(
           status: 'awaiting_pro_to_post',
         },
       })
-      await notifyProPostApproved(params.id)
+      await notifyProPostApproved(params.id, code)
     } else {
       // Reject and notify PRO
       await prisma.submission.update({
@@ -49,7 +54,7 @@ export async function POST(
           status: 'rejected',
         },
       })
-      await notifyProPostRejected(params.id, comment || '')
+      await notifyProPostRejected(params.id, comment || '', code)
     }
 
     return NextResponse.json({ success: true })
