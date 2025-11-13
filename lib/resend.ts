@@ -26,6 +26,15 @@ function getBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
+function getFromEmail(): string {
+  const email = process.env.RESEND_FROM_EMAIL
+  if (!email) {
+    throw new Error('RESEND_FROM_EMAIL is not set')
+  }
+  // Format as "Display Name <email@domain.com>"
+  return `DMRT Postal Service <${email}>`
+}
+
 export async function sendMagicLink(
   email: string,
   role: 'team_member' | 'pro' | 'leader',
@@ -49,13 +58,8 @@ export async function sendMagicLink(
     link += `/approve/${submissionId}?code=${code}`
   }
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL
-  if (!fromEmail) {
-    throw new Error('RESEND_FROM_EMAIL is not set')
-  }
-
   const result = await getResend().emails.send({
-    from: fromEmail,
+    from: getFromEmail(),
     to: email,
     subject: 'DMRT Postal Service - Your login link',
     html: `
@@ -75,7 +79,7 @@ export async function notifyPRO(submissionId: string, code: string): Promise<voi
   const link = `${baseUrl}/pro?code=${code}`
   
   await getResend().emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+    from: getFromEmail(),
     to: process.env.PRO_EMAIL!,
     subject: 'New DMRT Post - Awaiting your review',
     html: `
@@ -98,7 +102,7 @@ export async function notifyTeamLeader(submissionId: string, code: string): Prom
 
   // Send to all team leader emails
   await getResend().emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+    from: getFromEmail(),
     to: leaderEmails,
     subject: 'New DMRT Post - Awaiting your approval',
     html: `
@@ -113,7 +117,7 @@ export async function notifyProPostApproved(submissionId: string, code: string):
   const link = `${baseUrl}/pro?code=${code}`
   
   await getResend().emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+    from: getFromEmail(),
     to: process.env.PRO_EMAIL!,
     subject: 'Post Approved - Ready to Post',
     html: `
@@ -128,7 +132,7 @@ export async function notifyProPostRejected(submissionId: string, comment: strin
   const link = `${baseUrl}/pro?code=${code}`
   
   await getResend().emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+    from: getFromEmail(),
     to: process.env.PRO_EMAIL!,
     subject: 'Post Rejected',
     html: `
