@@ -1,3 +1,5 @@
+const { withBotId } = require('botid/next/config')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -7,14 +9,6 @@ const nextConfig = {
         hostname: '**.public.blob.vercel-storage.com',
       },
     ],
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/botid/:path*',
-        destination: 'https://botid.vercel.app/:path*',
-      },
-    ]
   },
   async headers() {
     return [
@@ -51,4 +45,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withBotId(nextConfig)
