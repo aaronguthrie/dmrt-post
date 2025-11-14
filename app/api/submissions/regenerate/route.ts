@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generatePost } from '@/lib/gemini'
 import { isBot } from '@/lib/security'
+import { validateFeedbackLength } from '@/lib/validation'
+import { checkSubmissionAccess } from '@/lib/auth-middleware'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,12 +18,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Submission ID required' }, { status: 400 })
     }
 
+    // Validate feedback length if provided
+    if (feedback) {
+      const feedbackValidation = validateFeedbackLength(feedback)
+      if (!feedbackValidation.valid) {
+        return NextResponse.json({ error: feedbackValidation.error }, { status: 400 })
+      }
+    }
+
     const submission = await prisma.submission.findUnique({
       where: { id: submissionId },
     })
 
     if (!submission) {
       return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
+    }
+
+    // Check authorization - user must own submission or be PRO/leader
+    const authCheck = await checkSubmissionAccess(
+      request,
+      submission.submittedByEmail,
+      true, // Allow PRO
+      true  // Allow leader
+    )
+    
+    if (authCheck instanceof NextResponse) {
+      return authCheck
     }
 
     // Get feedback count for version number

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { createAuthCode } from '@/lib/auth'
 import { notifyProPostApproved, notifyProPostRejected } from '@/lib/resend'
 import { isBot } from '@/lib/security'
+import { requireRole } from '@/lib/auth-middleware'
 
 export async function POST(
   request: NextRequest,
@@ -14,6 +15,13 @@ export async function POST(
     if (isBot(userAgent)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
+
+    // Require leader role to approve
+    const authCheck = await requireRole(request, 'leader')
+    if (authCheck instanceof NextResponse) {
+      return authCheck
+    }
+
     const { approved, comment } = await request.json()
 
     const submission = await prisma.submission.findUnique({

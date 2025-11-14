@@ -4,6 +4,7 @@ import { createAuthCode } from '@/lib/auth'
 import { notifyTeamLeader } from '@/lib/resend'
 import { SubmissionStatus } from '@prisma/client'
 import { isBot } from '@/lib/security'
+import { requireRole } from '@/lib/auth-middleware'
 
 export async function POST(
   request: NextRequest,
@@ -15,6 +16,13 @@ export async function POST(
     if (isBot(userAgent)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
+
+    // Require PRO role to send for approval
+    const authCheck = await requireRole(request, 'pro')
+    if (authCheck instanceof NextResponse) {
+      return authCheck
+    }
+
     const { editedPostText } = await request.json()
 
     const submission = await prisma.submission.findUnique({

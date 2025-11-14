@@ -2,9 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAuthCode, validateEmailForRole } from '@/lib/auth'
 import { sendMagicLink } from '@/lib/resend'
 import { Role } from '@prisma/client'
+import { rateLimitByIP, rateLimitByIdentifier } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting by IP
+    const ip = request.ip ?? request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
+    const ipRateLimit = await rateLimitByIP(ip, 5, 15 * 60 * 1000) // 5 requests per 15 minutes
+    
+    if (!ipRateLimit.success) {
+      return NextResponse.json(
+        { 
+          error: 'Too many requests. Please try again later.',
+          code: 'RATE_LIMIT_EXCEEDED',
+          retryAfter: Math.ceil((ipRateLimit.reset - Date.now()) / 1000),
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': ipRateLimit.limit.toString(),
+            'X-RateLimit-Remaining': ipRateLimit.remaining.toString(),
+            'X-RateLimit-Reset': ipRateLimit.reset.toString(),
+            'Retry-After': Math.ceil((ipRateLimit.reset - Date.now()) / 1000).toString(),
+          },
+        }
+      )
+    }
     // Validate environment variables first
     if (!process.env.RESEND_API_KEY) {
       console.error('RESEND_API_KEY is not set')
@@ -59,14 +82,38 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Rate limiting by email (prevent email enumeration spam)
+    const emailRateLimit = await rateLimitByIdentifier(email.toLowerCase(), 3, 60 * 60 * 1000) // 3 requests per hour per email
+    
+    if (!emailRateLimit.success) {
+      return NextResponse.json(
+        { 
+          error: 'Too many requests for this email. Please try again later.',
+          code: 'EMAIL_RATE_LIMIT_EXCEEDED',
+          retryAfter: Math.ceil((emailRateLimit.reset - Date.now()) / 1000),
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': emailRateLimit.limit.toString(),
+            'X-RateLimit-Remaining': emailRateLimit.remaining.toString(),
+            'X-RateLimit-Reset': emailRateLimit.reset.toString(),
+            'Retry-After': Math.ceil((emailRateLimit.reset - Date.now()) / 1000).toString(),
+          },
+        }
+      )
+    }
+
     const isValid = validateEmailForRole(email, validRole)
-    console.log('Email validation result:', { email, role: validRole, isValid })
+    // Only log non-sensitive info in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Email validation result:', { email, role: validRole, isValid })
+    }
     
     if (!isValid) {
       return NextResponse.json({ 
         error: 'Email not authorised. If you think this is wrong reach out to Public Relations Officer.',
-        code: 'UNAUTHORIZED_EMAIL',
-        details: `Email "${email}" with role "${validRole}" is not authorized. Check Vercel environment variables.`
+        code: 'UNAUTHORIZED_EMAIL'
       }, { status: 403 })
     }
 
@@ -100,16 +147,16 @@ export async function POST(request: NextRequest) {
     console.error('Unexpected error sending auth link:', error)
     const errorMessage = error?.message || 'Failed to send auth link'
     
-    // Log comprehensive error details
-    console.error('Error details:', {
-      message: errorMessage,
-      stack: error?.stack,
-      name: error?.name,
-      hasResendApiKey: !!process.env.RESEND_API_KEY,
-      hasResendFromEmail: !!process.env.RESEND_FROM_EMAIL,
-      hasPostgresUrl: !!process.env.POSTGRES_URL,
-      baseUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || process.env.VERCEL_URL || 'not set',
-    })
+    // Log error details (sanitized - no sensitive env vars)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error details:', {
+        message: errorMessage,
+        stack: error?.stack,
+        name: error?.name,
+      })
+    } else {
+      console.error('Error sending auth link:', errorMessage)
+    }
     
     return NextResponse.json({ 
       error: 'Failed to send auth link',

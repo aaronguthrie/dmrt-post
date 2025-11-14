@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { postToFacebook, postToInstagram } from '@/lib/meta'
 import { isBot } from '@/lib/security'
+import { requireRole } from '@/lib/auth-middleware'
 
 export async function POST(
   request: NextRequest,
@@ -13,6 +14,13 @@ export async function POST(
     if (isBot(userAgent)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
+
+    // Require PRO role to post
+    const authCheck = await requireRole(request, 'pro')
+    if (authCheck instanceof NextResponse) {
+      return authCheck
+    }
+
     const submission = await prisma.submission.findUnique({
       where: { id: params.id },
     })

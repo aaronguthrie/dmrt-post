@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { createAuthCode } from '@/lib/auth'
 import { notifyPRO } from '@/lib/resend'
 import { isBot } from '@/lib/security'
+import { checkSubmissionAccess } from '@/lib/auth-middleware'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,27 @@ export async function POST(request: NextRequest) {
 
     if (!submissionId) {
       return NextResponse.json({ error: 'Submission ID required' }, { status: 400 })
+    }
+
+    // First check if submission exists and get owner
+    const existingSubmission = await prisma.submission.findUnique({
+      where: { id: submissionId },
+    })
+
+    if (!existingSubmission) {
+      return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
+    }
+
+    // Check authorization - only owner can mark as ready
+    const authCheck = await checkSubmissionAccess(
+      request,
+      existingSubmission.submittedByEmail,
+      false, // PRO cannot mark as ready
+      false  // Leader cannot mark as ready
+    )
+    
+    if (authCheck instanceof NextResponse) {
+      return authCheck
     }
 
     const submission = await prisma.submission.update({

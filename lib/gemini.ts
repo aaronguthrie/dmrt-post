@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { sanitizePromptInput } from './validation'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
@@ -81,12 +82,17 @@ export async function generatePost(
   previousOutput: string | null = null,
   feedback: string | null = null
 ): Promise<string> {
+  // Sanitize all inputs to prevent prompt injection
+  const sanitizedNotes = sanitizePromptInput(notes)
+  const sanitizedPreviousOutput = previousOutput ? sanitizePromptInput(previousOutput) : null
+  const sanitizedFeedback = feedback ? sanitizePromptInput(feedback) : null
+
   let userPrompt: string
 
-  if (feedback && previousOutput) {
-    userPrompt = `Original notes: ${notes}\n\nPrevious AI output: ${previousOutput}\n\nUser feedback: ${feedback}\n\nRegenerate the post incorporating their feedback.`
+  if (sanitizedFeedback && sanitizedPreviousOutput) {
+    userPrompt = `Original notes: ${sanitizedNotes}\n\nPrevious AI output: ${sanitizedPreviousOutput}\n\nUser feedback: ${sanitizedFeedback}\n\nRegenerate the post incorporating their feedback.`
   } else {
-    userPrompt = `Transform these notes into a social media post:\n\n${notes}`
+    userPrompt = `Transform these notes into a social media post:\n\n${sanitizedNotes}`
   }
 
   const result = await model.generateContent({

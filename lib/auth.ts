@@ -1,11 +1,14 @@
 import { prisma } from './db'
 import { Role } from '@prisma/client'
+import { randomBytes } from 'crypto'
 
 export function generateAuthCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  // Use cryptographically secure random number generator
+  const randomBytesBuffer = randomBytes(32)
   let code = ''
   for (let i = 0; i < 32; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length))
+    code += chars[randomBytesBuffer[i] % chars.length]
   }
   return code
 }
@@ -15,7 +18,10 @@ export function validateEmailForRole(email: string, role: Role): boolean {
   
   if (role === 'pro') {
     const isValid = email === process.env.PRO_EMAIL
-    console.log('PRO validation:', { email: trimmedEmail, proEmail: process.env.PRO_EMAIL, isValid })
+    // Only log non-sensitive info in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('PRO validation:', { email: trimmedEmail, isValid })
+    }
     return isValid
   }
   if (role === 'leader') {
@@ -23,24 +29,20 @@ export function validateEmailForRole(email: string, role: Role): boolean {
     const leaderEmailsRaw = process.env.TEAM_LEADER_EMAIL || ''
     const leaderEmails = leaderEmailsRaw.split(',').map(e => e.trim()).filter(Boolean)
     const isValid = leaderEmails.includes(trimmedEmail)
-    console.log('Leader validation:', { 
-      email: trimmedEmail, 
-      teamLeaderEmail: process.env.TEAM_LEADER_EMAIL,
-      parsedEmails: leaderEmails,
-      isValid 
-    })
+    // Only log non-sensitive info in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Leader validation:', { email: trimmedEmail, isValid })
+    }
     return isValid
   }
   if (role === 'team_member') {
     const approvedEmailsRaw = process.env.APPROVED_TEAM_EMAILS || ''
     const approvedEmails = approvedEmailsRaw.split(',').map(e => e.trim()).filter(Boolean)
     const isValid = approvedEmails.includes(trimmedEmail)
-    console.log('Team member validation:', { 
-      email: trimmedEmail, 
-      approvedEmailsRaw: process.env.APPROVED_TEAM_EMAILS,
-      parsedEmails: approvedEmails.slice(0, 3), // Log first 3 to avoid spam
-      isValid 
-    })
+    // Only log non-sensitive info in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Team member validation:', { email: trimmedEmail, isValid })
+    }
     return isValid
   }
   return false
@@ -72,36 +74,54 @@ export async function validateAuthCode(
   code: string,
   role?: Role
 ): Promise<{ valid: boolean; email?: string; role?: Role; submissionId?: string }> {
-  const authCode = await prisma.authCode.findUnique({
-    where: { code },
+  // Use atomic transaction to prevent race conditions
+  const result = await prisma.$transaction(async (tx) => {
+    const authCode = await tx.authCode.findUnique({
+      where: { code },
+    })
+
+    if (!authCode) {
+      return null
+    }
+
+    if (authCode.used) {
+      return null
+    }
+
+    if (authCode.expiresAt < new Date()) {
+      return null
+    }
+
+    if (role && authCode.role !== role) {
+      return null
+    }
+
+    // Atomic update - only one request can succeed
+    // This prevents race conditions where multiple requests use the same code
+    const updated = await tx.authCode.updateMany({
+      where: {
+        code,
+        used: false, // Only update if not already used
+      },
+      data: { used: true },
+    })
+
+    // If count is 0, another request already used this code
+    if (updated.count === 0) {
+      return null
+    }
+
+    return authCode
   })
 
-  if (!authCode) {
+  if (!result) {
     return { valid: false }
   }
-
-  if (authCode.used) {
-    return { valid: false }
-  }
-
-  if (authCode.expiresAt < new Date()) {
-    return { valid: false }
-  }
-
-  if (role && authCode.role !== role) {
-    return { valid: false }
-  }
-
-  // Mark as used
-  await prisma.authCode.update({
-    where: { code },
-    data: { used: true },
-  })
 
   return {
     valid: true,
-    email: authCode.email,
-    role: authCode.role,
-    submissionId: authCode.submissionId || undefined,
+    email: result.email,
+    role: result.role,
+    submissionId: result.submissionId || undefined,
   }
 }
