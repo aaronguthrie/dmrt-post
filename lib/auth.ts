@@ -77,22 +77,22 @@ export async function validateAuthCode(
   // Use atomic transaction to prevent race conditions
   const result = await prisma.$transaction(async (tx) => {
     const authCode = await tx.authCode.findUnique({
-      where: { code },
-    })
+    where: { code },
+  })
 
-    if (!authCode) {
+  if (!authCode) {
       return null
-    }
+  }
 
-    if (authCode.used) {
+  if (authCode.used) {
       return null
-    }
+  }
 
-    if (authCode.expiresAt < new Date()) {
+  if (authCode.expiresAt < new Date()) {
       return null
-    }
+  }
 
-    if (role && authCode.role !== role) {
+  if (role && authCode.role !== role) {
       return null
     }
 

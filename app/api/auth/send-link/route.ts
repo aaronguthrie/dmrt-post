@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const isValid = validateEmailForRole(email, validRole)
     // Only log non-sensitive info in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('Email validation result:', { email, role: validRole, isValid })
+    console.log('Email validation result:', { email, role: validRole, isValid })
     }
     
     if (!isValid) {
@@ -149,11 +149,11 @@ export async function POST(request: NextRequest) {
     
     // Log error details (sanitized - no sensitive env vars)
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error details:', {
-        message: errorMessage,
-        stack: error?.stack,
-        name: error?.name,
-      })
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: error?.stack,
+      name: error?.name,
+    })
     } else {
       console.error('Error sending auth link:', errorMessage)
     }

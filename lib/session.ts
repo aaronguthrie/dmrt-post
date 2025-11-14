@@ -1,6 +1,7 @@
 // Session management for authentication
 import { cookies } from 'next/headers'
 import { Role } from '@prisma/client'
+import { SignJWT, jwtVerify } from 'jose'
 
 export interface Session {
   email: string
@@ -11,24 +12,35 @@ export interface Session {
 const SESSION_COOKIE_NAME = 'dmrt_session'
 const SESSION_MAX_AGE = 24 * 60 * 60 // 24 hours in seconds
 
+// Get session secret from environment variable
+function getSessionSecret(): Uint8Array {
+  const secret = process.env.SESSION_SECRET
+  if (!secret) {
+    throw new Error('SESSION_SECRET environment variable is required')
+  }
+  return new TextEncoder().encode(secret)
+}
+
 /**
  * Creates a session after successful authentication
+ * Uses JWT (JSON Web Token) with HMAC-SHA256 signing for security
  */
 export async function createSession(session: Session): Promise<void> {
   const cookieStore = await cookies()
+  const secret = getSessionSecret()
   
-  // Simple session token (in production, use JWT or signed cookies)
-  const sessionData = JSON.stringify({
+  // Create signed JWT token
+  const jwt = await new SignJWT({
     email: session.email,
     role: session.role,
     submissionId: session.submissionId,
-    expiresAt: Date.now() + SESSION_MAX_AGE * 1000,
   })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h')
+    .sign(secret)
   
-  // Base64 encode (in production, use proper encryption)
-  const sessionToken = Buffer.from(sessionData).toString('base64')
-  
-  cookieStore.set(SESSION_COOKIE_NAME, sessionToken, {
+  cookieStore.set(SESSION_COOKIE_NAME, jwt, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -39,29 +51,27 @@ export async function createSession(session: Session): Promise<void> {
 
 /**
  * Gets the current session from cookies
+ * Verifies JWT signature to prevent tampering
  */
 export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies()
-  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
   
-  if (!sessionToken) {
+  if (!token) {
     return null
   }
   
   try {
-    const sessionData = JSON.parse(Buffer.from(sessionToken, 'base64').toString())
-    
-    // Check expiration
-    if (sessionData.expiresAt < Date.now()) {
-      return null
-    }
+    const secret = getSessionSecret()
+    const { payload } = await jwtVerify(token, secret)
     
     return {
-      email: sessionData.email,
-      role: sessionData.role,
-      submissionId: sessionData.submissionId,
+      email: payload.email as string,
+      role: payload.role as Role,
+      submissionId: payload.submissionId as string | undefined,
     }
   } catch (error) {
+    // Invalid token, expired, or tampered with
     return null
   }
 }

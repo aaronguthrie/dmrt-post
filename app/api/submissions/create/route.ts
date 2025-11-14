@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       
       if (validFiles.length > 0) {
         const uploadedUrls = await uploadPhotos(validFiles)
-        photoPaths.push(...uploadedUrls)
+      photoPaths.push(...uploadedUrls)
       }
     }
 

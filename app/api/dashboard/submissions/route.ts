@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isBot } from '@/lib/security'
+import { requireAuth } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +10,14 @@ export async function GET(request: NextRequest) {
     if (isBot(userAgent)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
+
+    // Require authentication (dashboard should be accessible to authenticated users)
+    const authCheck = await requireAuth(request)
+    if (authCheck instanceof NextResponse) {
+      return authCheck
+    }
+    const session = authCheck
+
     const searchParams = request.nextUrl.searchParams
     const status = searchParams.get('status')
     const search = searchParams.get('search')
@@ -25,6 +34,8 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    // Note: Dashboard shows all submissions (intended for transparency)
+    // But requires authentication to access
     const submissions = await prisma.submission.findMany({
       where,
       include: {
