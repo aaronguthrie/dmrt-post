@@ -35,8 +35,7 @@ export default function RootLayout({
         <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
       </head>
       <body className="font-sans">
-        {/* BotID temporarily disabled - challenge script 404 issue */}
-        {/* <BotIdClient protect={[
+        <BotIdClient protect={[
           { path: '/api/auth/send-link', method: 'POST' },
           { path: '/api/auth/validate', method: 'POST' },
           { path: '/api/submissions/create', method: 'POST' },
@@ -50,7 +49,7 @@ export default function RootLayout({
           { path: '/api/submissions/[id]/post', method: 'POST' },
           { path: '/api/dashboard/submissions', method: 'GET' },
           { path: '/api/dashboard/export', method: 'GET' },
-        ]} /> */}
+        ]} />
         {children}
         <Analytics />
       </body>
